@@ -3,6 +3,8 @@ import '../App.css';
 import axios from 'axios';
 import Footer from './Footer';
 import {Node_IP, Node_Port} from "./../config";
+import { graphql } from 'react-apollo';
+import { getPropsQuery } from '../queries/queries';
 
 class Displayprops extends Component {
     constructor(props) {
@@ -28,52 +30,13 @@ class Displayprops extends Component {
             enddate: this.state.Home_props.enddate,
             guests: this.state.Home_props.accomodations
         }
-        await axios.post(Node_IP+Node_Port+'/search', data)
-            .then((response) => {
-                console.log("Status Code : ", response.data);
-                if (response.status === 200) {
-                    this.setState({
-                        prs: response.data,
-                        prsreuse:response.data
-                    })
-                } else {
-                    console.log("not done")
-                }
-            });
-        console.log(this.state)
-        let details = this.state.prs.map(pr => {
+        console.log(this.props)
+        setTimeout(() => {
             this.setState({
-                photos1: [...this.state.photos1, pr.photos]
+                prs:this.props.data.Properties
             })
-        })
-        console.log(this.state)
-        for (var i = 0; i < this.state.photos1.length; i++) {
-            var data = {
-                photos: this.state.photos1[i]
-            }
-
-            await axios.post(Node_IP+Node_Port+'/download', data)
-                .then((response) => {
-                    //console.log("Inside download..Display propss")
-                    //console.log("Status Code : ", response.data[0]);
-                    if (response.status === 200) {
-                        this.setState({
-                            photos2: [...this.state.photos2, response.data[0]]
-                        })
-                    } else {
-                        this.setState({
-                            photos2: [...this.state.photos2, " waste"]
-                        })
-                        console.log("not done")
-                    }
-                }).catch(err => {
-                    this.setState({
-                        photos2: [...this.state.photos2, ""]
-                    })
-                    console.log(err);
-                })
-
-        }
+        }, 1000);
+        
     }
 
     // Without async, it's not setting state
@@ -120,6 +83,7 @@ class Displayprops extends Component {
         //}
     }
     render() {
+        //console.log(this.props.data.Properties)
         const { prs, photos2, currentPage, todosPerPage } = this.state;
         const indexOfLastTodo = currentPage * todosPerPage;
         const indexOfFirstTodo = indexOfLastTodo - todosPerPage;
@@ -192,4 +156,4 @@ class Displayprops extends Component {
     }
 }
 
-export default Displayprops
+export default graphql(getPropsQuery)(Displayprops)

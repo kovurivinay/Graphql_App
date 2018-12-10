@@ -55,6 +55,8 @@ class Home extends Component {
         else {
             this.props.history.push("/Displayprops", this.state)
         }
+        
+
     }
     componentWillMount() { }
 

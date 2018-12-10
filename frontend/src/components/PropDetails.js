@@ -5,13 +5,32 @@ import { Route } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { Redirect } from 'react-router';
 import Footer from './Footer';
-import {Node_IP, Node_Port} from "./../config";
+import { Node_IP, Node_Port } from "./../config";
+import { graphql, compose } from 'react-apollo';
+import { gql } from 'apollo-boost';
+import { getPropertyDetails, getPropsQuery } from '../queries/queries';
+
+// const getPropertyDetails = gql`
+//             {
+//                 Property(_id:2){
+//                 owner
+//             }
+//         }
+//         `;
 
 class PropDetails extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            prs: "",
+            prs: {
+                price: "",
+                description: "",
+                bedrooms: "",
+                bathrooms: "",
+                startdate: "",
+                enddate: "",
+                owner: ""
+            },
             Home_props: "",
             days: 0,
             photos: [],
@@ -19,142 +38,19 @@ class PropDetails extends Component {
         }
 
     }
-
-    async componentWillMount() {
-        console.log(this.props.location.state.ID)
-        console.log("Here 1")
-        var data = {
-            ID: this.props.location.state._id
+    display1() {
+        
+        console.log(this.props.getPropertyDetails)
+        if (this.props.getPropertyDetails.loading) {
+            return (<div >Loading Page......</div>);
         }
-        this.setState({
-            Home_props: this.props.location.state.Home_props
-        })
-        await axios.post(Node_IP+Node_Port+'/searchprop', data)
-            .then((response) => {
-                console.log("Status Code : ", response.data);
-                if (response.status === 200) {
-                    this.setState({
-
-                        prs: response.data
-                    })
-                } else {
-                    console.log("not done")
-                }
-            });
-        var data1 = {
-            photos: this.state.prs.photos
-        }
-        console.log("Here 2" + this.state.prs)
-        if (data1.photos != "") {
-            await axios.post(Node_IP+Node_Port+'/download', data1)
-                .then((response) => {
-                    console.log("Inside download..")
-                    console.log("Status Code : ", response.data);
-                    if (response.status === 200) {
-                        this.setState({
-
-                            photos: response.data
-                        })
-                    } else {
-                        console.log("not done")
-                    }
-                });
-        }
-        console.log(this.state.photos)
-        this.setState({ days: (new Date(this.state.Home_props.enddate) - new Date(this.state.Home_props.startdate)) / 86400000 });
-        var Booked_dates = [];
-        var nextDay = new Date(this.state.Home_props.startdate);
-        console.log(nextDay)
-        console.log("Here 3")
-        for (var i = 0; i < this.state.days + 1; i++) {
-            nextDay.setDate(nextDay.getDate() + 1)
-            Booked_dates.push(new Date(nextDay));
-
-        }
-        console.log("After operation: " + Booked_dates)
-
-        this.setState({
-            Booked_dates1: Booked_dates
-        })
-        console.log("After operation state: " + Booked_dates)
-
-        //console.log(this.state)
-        // console.log("Diff "+(this.state.days))
-        console.log(this.state.prs)
-        console.log("Total : " + Number(this.state.prs.price) * this.state.days)
-    }
-    Book = async () => {
-        var data2 = {
-            dates: this.state.Booked_dates1,
-            ID: this.state.prs._id,
-            customer_name: localStorage.getItem('email'),
-            
-
-        }
-        console.log(data2)
-        await axios.post(Node_IP+Node_Port+'/Bookdates', data2)
-            .then((response) => {
-                console.log("Inside download..")
-                console.log("Status Code : ", response.data);
-                if (response.status === 200) {
-
-                    console.log("Insertion done");
-                    console.log(response.data)
-                    this.props.history.push("/BookingHistory")
-                } else {
-                    console.log("not done")
-                }
-            })
-    }
-
-    change = (e) => {
-        this.setState({
-            [e.target.name]: e.target.value,
-        })
-    }
-
-    send = (e)=>{
-        const data={
-            message:this.state.message,
-            from: localStorage.getItem('email'),
-            to: this.state.prs.owner,
-        }
-        axios.post(Node_IP+Node_Port+'/messages',data)
-        .then(res => {
-            console.log("message sent")
-        }).catch(err=>{
-            console.log(err)
-        })
-    }
-
-    render() {
-        var photos = []
-        if (this.state.photos.length > 0) {
-            photos.push(
-                <div class="item active container-img">
-                    <img src={'data:image/jpeg;base64,' + this.state.photos[0]} alt="Not found" style={{ 'width': '100%' }} />
-                </div>
-
-            )
-        }
-        for (var i = 1; i < this.state.photos.length; i++) {
-            photos.push(
-                <div class="item container-img">
-                    <img src={'data:image/jpeg;base64,' + this.state.photos[i]} alt="Not found" style={{ 'width': '100%' }} />
-                </div>
-
-            )
-        }
-
-
-
-        return (<div>
-            <div className="col-lg-12">
+        else {
+            return (<div className="col-lg-12">
                 <div class="container col-lg-8 rounded1">
 
                     <div id="myCarousel" class="carousel slide rounded1" data-ride="carousel">
                         <div class="carousel-inner">
-                            {photos}
+                            {}
                         </div>
 
                         <a class="left carousel-control" href="#myCarousel" data-slide="prev">
@@ -173,7 +69,7 @@ class PropDetails extends Component {
                         <div class="col-lg-12 free-space"></div>
                         <div class="col-lg-12 free-space"></div>
                         <div class="col-lg-12">
-                            <span style={{ 'fontSize': '30px' }}>${this.state.prs.price}</span>  per night</div>
+                            <span style={{ 'fontSize': '30px' }}>${this.props.getPropertyDetails.Property.price}</span>  per night</div>
                         <div class="col-lg-12 free-space"></div>
                         <div class="col-lg-6 border-dates ">
                             <label for="startdate">Check-in</label>
@@ -189,7 +85,7 @@ class PropDetails extends Component {
                         </div>
                         <div class="col-lg-12 free-space"></div>
                         <div className="text1">Total:
-                        {this.state.prs.price * this.state.days}
+                {this.props.getPropertyDetails.Property.price * 2}
                         </div>
                         <div class="col-lg-12 free-space"></div>
                         <div class="col-lg-12 free-space"></div>
@@ -227,8 +123,8 @@ class PropDetails extends Component {
                 </div>
                 <div class="col-lg-12 free-space"></div>
                 <div class="col-lg-12 " style={{ 'height': '400px' }}>
-                    <h3>{this.state.prs.headline} </h3>
-                    <p><i class="fas fa-map-marked-alt fa-2x"></i>&nbsp;{this.state.prs.street}, {this.state.prs.city}, {this.state.prs.state}</p>
+                    <h3>{this.props.getPropertyDetails.Property.headline} </h3>
+                    <p><i class="fas fa-map-marked-alt fa-2x"></i>&nbsp;{this.props.getPropertyDetails.Property.street}, {this.props.getPropertyDetails.Property.city}, {this.props.getPropertyDetails.Property.state}</p>
                     <div class="col-lg-12 free-space"></div>
                     <div class="col-lg-12 ">
                         <div class="col-lg-2 "></div>
@@ -238,17 +134,111 @@ class PropDetails extends Component {
                     </div>
                     <div class="col-lg-2"></div>
 
-                    <div class="col-lg-2 ">{this.state.prs.bathrooms}</div>
-                    <div class="col-lg-2 ">{this.state.prs.bedrooms}</div>
-                    <div class="col-lg-2 ">{this.state.prs.accomodations}</div>
+                    <div class="col-lg-2 ">{this.props.getPropertyDetails.Property.bathrooms}</div>
+                    <div class="col-lg-2 ">{this.props.getPropertyDetails.Property.bedrooms}</div>
+                    <div class="col-lg-2 ">{this.props.getPropertyDetails.Property.accomodations}</div>
 
                     <div class="col-lg-12 free-space"></div>
                     <div class="col-lg-12 free-space"></div>
                     <div class="col-lg-12 ">
-                        <p><i class="fas fa-quote-left fa-2x fa-pull-left"></i>{this.state.prs.description}</p></div>
+                        <p><i class="fas fa-quote-left fa-2x fa-pull-left"></i>{this.props.getPropertyDetails.Property.description}</p></div>
                 </div>
             </div>
+            )
+        }
+    }
+    async componentDidMount() {
+        // this.setState({
+        //     prs:this.props.getPropertyDetails.Property
+        // })
 
+        console.log(this.state)
+        console.log(this.props.location.state.ID)
+        // this.props.getPropertyDetails({
+        //     variables: {
+        //         id: 2                
+        //     }
+        // });
+        console.log(this.props)
+        console.log("Here 1")
+        var data = {
+            ID: this.props.location.state._id
+        }
+        this.setState({
+            Home_props: this.props.location.state.Home_props
+        })
+        console.log(this.state)
+        this.setState({ days: (new Date(this.state.Home_props.enddate) - new Date(this.state.Home_props.startdate)) / 86400000 });
+        var Booked_dates = [];
+        var nextDay = new Date(this.state.Home_props.startdate);
+        console.log(nextDay)
+        console.log("Here 3")
+        for (var i = 0; i < this.state.days + 1; i++) {
+            nextDay.setDate(nextDay.getDate() + 1)
+            Booked_dates.push(new Date(nextDay));
+
+        }
+        console.log("After operation: " + Booked_dates)
+
+        this.setState({
+            Booked_dates1: Booked_dates
+        })
+        console.log("After operation state: " + Booked_dates)
+
+        //console.log(this.state)
+        // console.log("Diff "+(this.state.days))
+        console.log(this.props.getPropertyDetails.Property)
+        //console.log("Total : " + Number(this.props.getPropertyDetails.Property.price) * this.state.days)
+    }
+    Book = async () => {
+        console.log(this.props.getPropertyDetails.Property._id)
+        var data2 = {
+            dates: this.state.Booked_dates1,
+            ID: this.props.getPropertyDetails.Property._id,
+            customer_name: localStorage.getItem('email'),
+
+
+        }
+        console.log(data2)
+        await axios.post(Node_IP + Node_Port + '/Bookdates', data2)
+            .then((response) => {
+                console.log("Inside download..")
+                console.log("Status Code : ", response.data);
+                if (response.status === 200) {
+
+                    console.log("Insertion done");
+                    console.log(response.data)
+                    this.props.history.push("/BookingHistory")
+                } else {
+                    console.log("not done")
+                }
+            })
+    }
+
+    change = (e) => {
+        this.setState({
+            [e.target.name]: e.target.value,
+        })
+    }
+
+    send = (e) => {
+        const data = {
+            message: this.state.message,
+            from: localStorage.getItem('email'),
+            to: this.props.getPropertyDetails.Property.owner,
+        }
+        axios.post(Node_IP + Node_Port + '/messages', data)
+            .then(res => {
+                console.log("message sent")
+            }).catch(err => {
+                console.log(err)
+            })
+    }
+
+    render() {
+        this.props.getPropertyDetails.variables._id = this.props.location.state.ID
+        return (<div>
+            {this.display1()}
 
             <Footer />
         </div>)
@@ -256,4 +246,7 @@ class PropDetails extends Component {
 }
 
 
-export default PropDetails
+export default compose(
+    graphql(getPropertyDetails, { name: "getPropertyDetails" }),
+    graphql(getPropsQuery, { name: "getPropsQuery" })
+)(PropDetails);

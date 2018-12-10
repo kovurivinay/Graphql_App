@@ -1,6 +1,8 @@
 const graphql = require('graphql');
 const _ = require('lodash');
 var { Users } = require('../models/user');
+var { Owners } = require('../models/owner');
+var { Property } = require('../models/property');
 var bcrypt = require('bcryptjs');
 const {
     GraphQLObjectType,
@@ -12,6 +14,7 @@ const {
     GraphQLNonNull
 } = graphql;
 
+var loginVar;
 
 // const BookType = new GraphQLObjectType({
 //     name: 'Book',
@@ -46,6 +49,12 @@ const UserType = new GraphQLObjectType({
     })
 })
 
+// const StatusType = new GraphQLObjectType({
+//     name: "status",
+//     fields: () => ({
+//         code: {type:GraphQLInt}
+//     })
+// })
 const OwnerType = new GraphQLObjectType({
     name: 'Owner',
     fields: () => ({
@@ -64,16 +73,60 @@ const OwnerType = new GraphQLObjectType({
     })
 })
 
+const PropertyType = new GraphQLObjectType({
+    name: 'Property',
+    fields: () => ({
+        _id: {
+            type: GraphQLID
+        },
+        owner: { type: GraphQLString },
+        country: { type: GraphQLString },
+        street: { type: GraphQLString },
+        city: { type: GraphQLString },
+        state: { type: GraphQLString },
+        zipcode: { type: GraphQLString },
+        headline: { type: GraphQLString },
+        description: { type: GraphQLString },
+        property_type: { type: GraphQLString },
+        bedrooms: { type: GraphQLInt },
+        accomodations: { type: GraphQLInt },
+        bathrooms: { type: GraphQLInt },
+        photos: { type: GraphQLString },
+        price: { type: GraphQLString },
+        amenities: { type: GraphQLString },
+        startdate: { type: GraphQLString },
+        enddate: { type: GraphQLString },
+        owner: { type: GraphQLString },
+        Customer_name: { type: GraphQLString },
+        Booked_dates: { type: GraphQLString }
+    })
+})
+
 const RootQuery = new GraphQLObjectType({
     name: 'RootQueryType',
     fields: {
         User: {
             type: UserType,
-            args: { email: { type: GraphQLString } },
+            args: {
+                email: { type: GraphQLString },
+                password: { type: GraphQLString }
+            },
             resolve(parent, args) {
-                return Users.findOne({
+                Users.findOne({
                     email: args.email
+                }, function (err, result) {
+                    if (err) {
+                        loginVar=err
+                    } else if (result) {
+                        if (bcrypt.compareSync(args.password, result.password)) {
+                            loginVar = result;
+                        }
+                        else {
+                            loginVar="Invalid Login"
+                        }
+                    }
                 })
+                return loginVar;
             }
         },
         Users: {
@@ -95,6 +148,19 @@ const RootQuery = new GraphQLObjectType({
             type: new GraphQLList(OwnerType),
             resolve(parent, args) {
                 return Owners.find()
+            }
+        },
+        Properties: {
+            type: GraphQLList(PropertyType),
+            resolve(parent, args) {
+                return Property.find()
+            }
+        },
+        Property:{
+            type: PropertyType,
+            args:{_id:{type:GraphQLID}},
+            resolve(parent,args){
+                return Property.findOne({_id:args._id})
             }
         }
     }
@@ -146,25 +212,127 @@ const Mutation = new GraphQLObjectType({
                 return Owner.save()
             }
         },
-        // addBook: {
-        //     type: BookType,
-        //     args: {
-        //         name: { type: GraphQLString },
-        //         genre: { type: GraphQLString },
-        //         authorId: { type: GraphQLID },
-        //     },
-        //     resolve(parent, args) {
-        //         let book = {
-        //             name: args.name,
-        //             genre: args.genre,
-        //             authorId: args.authorId,
-        //             id: count++
-        //         }
-        //         books.push(book);
-        //         return book;
-        //     }
-        // }
+        addProperty: {
+            type: PropertyType,
+            args: {
+                _id: {
+                    type: GraphQLID
+                },
+                owner: { type: GraphQLString },
+                country: { type: GraphQLString },
+                street: { type: GraphQLString },
+                city: { type: GraphQLString },
+                state: { type: GraphQLString },
+                zipcode: { type: GraphQLString },
+                headline: { type: GraphQLString },
+                description: { type: GraphQLString },
+                property_type: { type: GraphQLString },
+                bedrooms: { type: GraphQLInt },
+                accomodations: { type: GraphQLInt },
+                bathrooms: { type: GraphQLInt },
+                //photos: { type: GraphQLString },
+                price: { type: GraphQLString },
+                amenities: { type: GraphQLString },
+                startdate: { type: GraphQLString },
+                enddate: { type: GraphQLString },
+                owner: { type: GraphQLString },
+                Customer_name: { type: GraphQLString },
+                Booked_dates: { type: GraphQLString }
+            },
+            resolve(parent, args) {
+                var property = new Property({
+                    _id: count,
+                    owner: args.owner,
+                    country: args.country,
+                    street: args.street,
+                    city: args.city,
+                    state: args.state,
+                    zipcode: args.zipcode,
+                    headline: args.headline,
+                    description: args.description,
+                    property_type: args.property_type,
+                    bedrooms: args.bedrooms,
+                    accomodations: args.accomodations,
+                    bathrooms: args.bathrooms,
+                    //photos: b,
+                    price: args.price,
+                    amenities: args.amenities,
+                    startdate: args.startdate,
+                    enddate: args.enddate,
+                    Customer_name: "",
+                    Booked_dates: ""
+                });
+                count += 1;
+                property.save().then((user) => {
+                    console.log("Property added : ", user);
+                    return user
+                    res.sendStatus(200).end();
+                    //req.session.user = user;
+                }, (err) => {
+                    console.log("Error Creating User");
+                    console.log(err)
+                    return err
+                    res.sendStatus(400).end();
+                })
 
+            }
+        },
+        updateUserProfile: {
+            type: UserType,
+            args: {
+                first: { type: GraphQLString },
+                last: { type: GraphQLString },
+                email: { type: GraphQLString },
+                aboutme: { type: GraphQLString },
+                city: { type: GraphQLString },
+                country: { type: GraphQLString },
+                company: { type: GraphQLString },
+                school: { type: GraphQLString },
+                homtown: { type: GraphQLString },
+                languages: { type: GraphQLString },
+                gender: { type: GraphQLString }
+            },
+            resolve(parent, args) {
+                return Users.updateOne({
+                    email: args.email
+                }, { ...args }, function (err, result) {
+                    if (err) {
+                        console.log(err)
+                    }
+                    else if (result) {
+                        console.log(result)
+                    }
+                })
+            },
+            updateOwnerProfile: {
+                type: OwnerType,
+                args: {
+                    first: { type: GraphQLString },
+                    last: { type: GraphQLString },
+                    email: { type: GraphQLString },
+                    aboutme: { type: GraphQLString },
+                    city: { type: GraphQLString },
+                    country: { type: GraphQLString },
+                    company: { type: GraphQLString },
+                    school: { type: GraphQLString },
+                    homtown: { type: GraphQLString },
+                    languages: { type: GraphQLString },
+                    gender: { type: GraphQLString }
+                },
+                resolve(parent, args) {
+                    return Owners.updateOne({
+                        email: args.email
+                    }, { ...args }, function (err, result) {
+                        if (err) {
+                            console.log(err)
+                        }
+                        else if (result) {
+                            console.log(result)
+                        }
+                    })
+                }
+            }
+        }
     }
 });
 
