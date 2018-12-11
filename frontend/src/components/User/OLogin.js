@@ -5,8 +5,11 @@ import { Route } from 'react-router-dom';
 import Footer from '../Footer';
 import { Link } from 'react-router-dom';
 import { Redirect } from 'react-router';
-import {connect} from "react-redux";
-import {ologinvalidation} from '../../actions/index'
+// import {connect} from "react-redux";
+// import {ologinvalidation} from '../../actions/index'
+import { graphql, compose } from 'react-apollo';
+import { gql } from 'apollo-boost';
+import { checkOEmail } from '../../queries/queries';
 
 class OLogin extends Component {
     constructor() {
@@ -61,20 +64,31 @@ class OLogin extends Component {
         })
         if(!err){
             const data = {
-                username : this.state.username,
+                email : this.state.username,
                 password : this.state.password
             }
-            console.log(data.username)
-            this.props.ologinvalidation(data);
-            setTimeout(() => {
-                //console.log(this.props)
-                if (this.props.Lvalue == true) {
-                    this.props.history.push('/Home')
-                }
-                else{
-                    alert("Wrong Credentials!")
-                }
-            }, 1000);
+            console.log(data.email)
+            //this.props.ologinvalidation(data);
+            this.props.checkOEmail.email=data.email;
+            this.props.checkOEmail.password=data.password;
+            console.log(this.props.checkOEmail);
+            if(this.props.checkOEmail.loading){
+                <div> Logging in... </div>
+            }
+            else{
+                localStorage.setItem('cookie','owner')
+                localStorage.setItem('email',data.email)
+                this.props.history.push('/Home')
+            }
+            // setTimeout(() => {
+            //     //console.log(this.props)
+            //     if (this.props.Lvalue == true) {
+            //         this.props.history.push('/Home')
+            //     }
+            //     else{
+            //         alert("Wrong Credentials!")
+            //     }
+            // }, 1000);
             // axios.defaults.withCredentials = true;
             // axios.post(Node_IP+Node_Port+'/ologin',data)
             //     .then(response => {
@@ -156,9 +170,7 @@ class OLogin extends Component {
     }
 }
 
-// export default OLogin
-const mapStateToProps = (state) => ({
-    Lvalue: state.login.Lvalue
-})
 
-export default connect(mapStateToProps, { ologinvalidation })(OLogin);
+export default compose(
+    graphql(checkOEmail, { name: "checkOEmail" })
+)(OLogin);

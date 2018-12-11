@@ -6,6 +6,8 @@ import Footer from '../Footer';
 import { Link } from 'react-router-dom';
 import { Redirect } from 'react-router';
 import {Node_IP, Node_Port} from "./../../config";
+import {withApollo} from 'react-apollo';
+import { addOwner } from '../../mutation/mutations';
 
 class Osignup extends Component {
     constructor() {
@@ -84,26 +86,22 @@ class Osignup extends Component {
                 password : this.state.password
             }
             console.log(data.first)
-            axios.defaults.withCredentials = true;
-            axios.post(Node_IP+Node_Port+'/OSignup',data)
-                .then(response => {
-                    localStorage.setItem('email', response.data.email);
-                    localStorage.setItem('cookie', response.data.cookie)
-                    console.log("Status Code : ",response.status);
-                    if(response.status === 200){
-                        this.setState({
-                            authFlag : true,
-                            direct:true
-                        })
-                    }else{
-                        this.setState({
-                            authFlag : false
-                        })
-                    }
-                }).catch(e=>{
-                    alert("Try with different Email ID!")
-                    console.log(e)
-                })
+            this.props.client.mutate({
+                mutation : addOwner,
+                variables: {
+                    email : data.email,
+                    password : data.password,
+                    first: data.first,
+                    last: data.last
+                }
+            }).then((response)=>{
+                console.log('Response', response.data);
+                localStorage.setItem('cookie','owner')
+                localStorage.setItem('email',response.data.addOwner.email)
+                this.props.history.push('/Home')
+            }).catch((err)=>{
+                console.log(err)
+            })
         }
         
     }
@@ -177,4 +175,4 @@ class Osignup extends Component {
     }
 }
 
-export default Osignup
+export default withApollo(Osignup)

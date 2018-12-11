@@ -5,6 +5,8 @@ import { Redirect } from 'react-router';
 import { connect } from "react-redux";
 import { fetchposts, loginvalidation } from "../../actions/index"
 import { stat } from 'fs';
+import {withApollo} from 'react-apollo';
+import { checkUEmail } from '../../queries/queries';
 
 class CLogin extends Component {
     constructor() {
@@ -55,19 +57,33 @@ class CLogin extends Component {
         e.preventDefault();
 
         const data = {
-            username: this.state.username,
+            email: this.state.username,
             password: this.state.password
         }
-        this.props.loginvalidation(data);
-        setTimeout(() => {
-            //console.log(this.props)
-            if (this.props.Lvalue == true) {
-                this.props.history.push('/Home')
+        //this.props.loginvalidation(data);
+        this.props.client.query({
+            query : checkUEmail,
+            variables: {
+                email : data.email,
+                password : data.password
             }
-            else{
-                alert("Wrong Credentials!")
-            }
-        }, 1000);
+        }).then((response)=>{
+            console.log('Response', response.data);
+            localStorage.setItem('cookie','customer')
+            localStorage.setItem('email',response.data.User.email)
+            this.props.history.push('/Home')
+        }).catch((err)=>{
+            console.log(err)
+        })
+        // setTimeout(() => {
+        //     //console.log(this.props)
+        //     if (this.props.Lvalue == true) {
+        //         this.props.history.push('/Home')
+        //     }
+        //     else{
+        //         alert("Wrong Credentials!")
+        //     }
+        // }, 1000);
     }
     componentWillMount() {
     }
@@ -140,18 +156,4 @@ class CLogin extends Component {
 
 
 
-// const mapDispatchToProps = (dispatch) => {
-//     return {
-//         login: (username, password) => dispatch(login(username, password))
-//     };
-// }
-
-// export default connect(mapStateToProps, mapDispatchToProps)(CLogin);
-const mapStateToProps = (state) => ({
-    Lvalue: state.login.Lvalue
-})
-
-
-
-
-export default connect(mapStateToProps, { loginvalidation })(CLogin);
+export default withApollo(CLogin);

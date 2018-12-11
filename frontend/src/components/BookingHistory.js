@@ -5,6 +5,8 @@ import { Route } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { Redirect } from 'react-router';
 import {Node_IP, Node_Port} from "./../config";
+import { withApollo } from 'react-apollo';
+import { getCustomerProps } from '../queries/queries';
 
 class BookingHistory extends Component {
     constructor(props) {
@@ -24,17 +26,22 @@ class BookingHistory extends Component {
         var data={
             name:localStorage.getItem('email')
         }
-        axios.post(Node_IP+Node_Port+'/get_bookings',data)
-                .then((response) => {
-                //update the state with the response data
-                console.log(response.data)
-                this.setState({
-                    bookings : response.data,
-                    
-                }); 
-            }).catch(err => {
-                console.log(err);
-            });
+
+        this.props.client.query({
+            query: getCustomerProps,
+            variables: {
+                email: localStorage.getItem('email')
+            }
+        }).then((response) => {
+            console.log("Inside get Bookings")
+            console.log('Response', response.data);
+            this.setState({
+                bookings:response.data.getCustomerProps
+            })
+        }).catch((err) => {
+            console.log(err)
+        })
+    
 
             
     }
@@ -119,4 +126,4 @@ class BookingHistory extends Component {
 }
 
 
-export default BookingHistory
+export default withApollo(BookingHistory)

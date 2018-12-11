@@ -2,8 +2,10 @@ import React, { Component } from 'react';
 import '../../App.css';
 import cookie from 'react-cookies';
 import axios from 'axios';
-import {Node_IP, Node_Port} from "./../../config";
-
+import { Node_IP, Node_Port } from "./../../config";
+import { withApollo } from 'react-apollo';
+import { updateUserProfile } from '../../mutation/mutations';
+import { getUserProfile, getOwnerProfile } from '../../queries/queries';
 
 class Profile extends Component {
     constructor() {
@@ -27,74 +29,72 @@ class Profile extends Component {
         this.setState({ [e.target.name]: e.target.value, });
     }
     componentDidMount() {
-        axios.defaults.headers.common['Authorization'] = localStorage.getItem('jwtToken')
-        if (localStorage.getItem('cookie')=="customer") {
-            axios.get(Node_IP+Node_Port+`/cget_profiles/${localStorage.getItem('email')}`)
-                .then((response) => {
-                    console.log("Inside cget profiles")
-                    console.log("Status Code : ", response.data);
-                    if (response.status === 200) {
-                        this.setState({
-                            ...response.data
-                        })
-                        console.log(this.state)
-                    } else {
-                        console.log("not done")
-                    }
-                }).catch(err => {
-                    console.log(err);
-                });
+        
+        if (localStorage.getItem('cookie') == "customer") {
+            this.props.client.query({
+                query: getUserProfile,
+                variables: {
+                    email: localStorage.getItem('email')
+                }
+            }).then((response) => {
+                console.log("Inside cget profiles")
+                console.log('Response', response.data);
+                this.setState({
+                    ...response.data.getUserProfile
+                })
+            }).catch((err) => {
+                console.log(err)
+            })
         }
-        else if (localStorage.getItem('cookie')=="owner") {
-            axios.get(Node_IP+Node_Port+`/oget_profiles/${localStorage.getItem('email')}`)
-                .then((response) => {
-                    console.log("Inside oget profiles")
-                    console.log("Status Code : ", response.data);
-                    if (response.status === 200) {
-                        this.setState({
-                            ...response.data
-                        })
-                    } else {
-                        console.log("not done")
-                    }
-                    console.log(this.state)
-                }).catch(err => {
-                    console.log(err);
-                });
+        else if (localStorage.getItem('cookie') == "owner") {
+            this.props.client.query({
+                query: getOwnerProfile,
+                variables: {
+                    email: localStorage.getItem('email')
+                }
+            }).then((response) => {
+                console.log("Inside oget profiles")
+                console.log('Response', response.data);
+                this.setState({
+                    ...response.data.getOwnerProfile
+                })
+            }).catch((err) => {
+                console.log(err)
+            })
         }
 
     }
 
     updateProfile = () => {
-        if (localStorage.getItem('cookie')=="customer") {
-            axios.put(Node_IP+Node_Port+'/cset_profiles', this.state)
-                .then((response) => {
-                    console.log("Inside cget profiles")
-                    console.log("Status Code : ", response.data);
-                    if (response.status === 200) {
-                        console.log("Updated")
-                        alert("Update successful!")
-                    } else {
-                        console.log("not done")
-                    }
-                }).catch(err => {
-                    console.log(err);
-                });
+        if (localStorage.getItem('cookie') == "customer") {
+
+            this.props.client.mutate({
+                mutation: updateUserProfile,
+                variables: {
+                    ...this.state
+                }
+            }).then((response) => {
+                console.log("Inside cset profiles")
+                console.log('Response', response.data);
+                alert("Update successful!")
+            }).catch((err) => {
+                console.log(err)
+            })
+
         }
-        else if (localStorage.getItem('cookie')=="owner") {
-            axios.put(Node_IP+Node_Port+'/oset_profiles', this.state)
-                .then((response) => {
-                    console.log("Inside oget profiles")
-                    console.log("Status Code : ", response.data);
-                    if (response.status === 200) {
-                        console.log("Updated")
-                        alert("Update successful!")
-                    } else {
-                        console.log("not done")
-                    }
-                }).catch(err => {
-                    console.log(err);
-                });
+        else if (localStorage.getItem('cookie') == "owner") {
+            this.props.client.mutate({
+                mutation: updateUserProfile,
+                variables: {
+                    ...this.state
+                }
+            }).then((response) => {
+                console.log("Inside oset profiles")
+                console.log('Response', response.data);
+                alert("Update successful!")
+            }).catch((err) => {
+                console.log(err)
+            })
         }
     }
     callProfilePage = () => {
@@ -105,7 +105,7 @@ class Profile extends Component {
 
         return (
             <div>
-             
+
                 <div class="img-circle user-photo"></div>
                 <div><center>
                     <i class="fas fa-user-edit fa-4x"></i></center>
@@ -204,4 +204,4 @@ class Profile extends Component {
     }
 }
 
-export default Profile;
+export default withApollo(Profile)

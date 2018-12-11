@@ -24,8 +24,8 @@ router.put('/cset_profiles', function (req, res) {
                 res.writeHead(200, {
                     'Content-Type': 'application/json'
                 })
-                console.log(JSON.stringify(results))
-                res.end(JSON.stringify(results));
+                console.log(JSON.stringify(result))
+                res.end(JSON.stringify(result));
             }
         })
     
@@ -55,8 +55,8 @@ router.put('/oset_profiles', function (req, res) {
             res.writeHead(200, {
                 'Content-Type': 'application/json'
             })
-            console.log(JSON.stringify(results))
-            res.end(JSON.stringify(results));
+            console.log(JSON.stringify(result))
+            res.end(JSON.stringify(result));
         }
     })
 });

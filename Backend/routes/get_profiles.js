@@ -25,7 +25,7 @@ router.get('/cget_profiles/:email', function (req, res) {
             res.writeHead(200, {
                 'Content-Type': 'application/json'
             })
-            res.end(JSON.stringify(results));
+            res.end(JSON.stringify(result));
         }
     })
     
@@ -42,10 +42,14 @@ router.get('/oget_profiles/:email', function (req, res) {
         email: msg.email
     }, function (err, result) {
         if (err) {
-            callback(err, null)
+            res.json({ status: "error", msg: "System error" })
+            res.sendStatus(400).end();
         } else if (result) {
             //delete result.password;
-            callback(null, result)
+            res.writeHead(200, {
+                'Content-Type': 'application/json'
+            })
+            res.end(JSON.stringify(result));
         }
     })
    

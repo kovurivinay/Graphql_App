@@ -6,6 +6,9 @@ import Footer from '../Footer';
 import { Link } from 'react-router-dom';
 import { Redirect } from 'react-router';
 import {Node_IP, Node_Port} from "./../../config";
+import {withApollo} from 'react-apollo';
+import { addUser } from '../../mutation/mutations';
+
 
 class Signup extends Component {
     constructor() {
@@ -84,27 +87,44 @@ class Signup extends Component {
                 password: this.state.password
             }
             console.log(data.first)
-            axios.defaults.withCredentials = true;
-            axios.post(Node_IP+Node_Port+'/cSignup', data)
-                .then(response => {
+            //console.log(this.props.client)
+            this.props.client.mutate({
+                mutation : addUser,
+                variables: {
+                    email : data.email,
+                    password : data.password,
+                    first: data.first,
+                    last: data.last
+                }
+            }).then((response)=>{
+                console.log('Response', response.data);
+                localStorage.setItem('cookie','customer')
+                localStorage.setItem('email',response.data.addUser.email)
+                this.props.history.push('/Home')
+            }).catch((err)=>{
+                console.log(err)
+            })
+            // axios.defaults.withCredentials = true;
+            // axios.post(Node_IP+Node_Port+'/cSignup', data)
+            //     .then(response => {
                     
-                    console.log("Status Code : ", response.status);
-                    if (response.status === 200) {
-                        localStorage.setItem('email', response.data.email);
-                    localStorage.setItem('cookie', response.data.cookie)
-                        this.setState({
-                            authFlag: true,
-                            direct: true
-                        })
-                    } else {
-                        this.setState({
-                            authFlag: false
-                        })
-                    }
-                }).catch(e=>{
-                    alert("Try with different Email ID!")
-                    console.log(e)
-                })
+            //         console.log("Status Code : ", response.status);
+            //         if (response.status === 200) {
+            //             localStorage.setItem('email', response.data.email);
+            //         localStorage.setItem('cookie', response.data.cookie)
+            //             this.setState({
+            //                 authFlag: true,
+            //                 direct: true
+            //             })
+            //         } else {
+            //             this.setState({
+            //                 authFlag: false
+            //             })
+            //         }
+            //     }).catch(e=>{
+            //         alert("Try with different Email ID!")
+            //         console.log(e)
+            //     })
         }
 
     }
@@ -187,4 +207,4 @@ var redirectTo=null;
     }
 }
 
-export default Signup
+export default withApollo(Signup)

@@ -112,58 +112,101 @@ const RootQuery = new GraphQLObjectType({
                 password: { type: GraphQLString }
             },
             resolve(parent, args) {
-                Users.findOne({
+                return Users.findOne({
                     email: args.email
                 }, function (err, result) {
                     if (err) {
-                        loginVar=err
+                        loginVar = err
                     } else if (result) {
+                        console.log(result)
                         if (bcrypt.compareSync(args.password, result.password)) {
                             loginVar = result;
                         }
                         else {
-                            loginVar="Invalid Login"
+                            loginVar = "Invalid Login"
                         }
                     }
-                })
-                return loginVar;
-            }
-        },
-        Users: {
-            type: new GraphQLList(UserType),
-            resolve(parent, args) {
-                return Users.find()
-            }
-        },
-        Owner: {
-            type: OwnerType,
-            args: { email: { type: GraphQLString } },
-            resolve(parent, args) {
-                return Owners.findOne({
-                    email: args.email
+                    return loginVar;
                 })
             }
+    },
+    Users: {
+        type: new GraphQLList(UserType),
+        resolve(parent, args) {
+            return Users.find()
+        }
+    },
+    getUserProfile:{
+        type: UserType,
+        args: {
+            email:{type:GraphQLString}
         },
-        Owners: {
-            type: new GraphQLList(OwnerType),
-            resolve(parent, args) {
-                return Owners.find()
-            }
+        resolve(parent,args){
+            return Users.findOne({
+                email: args.email
+            })
+        }
+    },
+    getOwnerProfile:{
+        type: OwnerType,
+        args: {
+            email:{type:GraphQLString}
         },
-        Properties: {
-            type: GraphQLList(PropertyType),
-            resolve(parent, args) {
-                return Property.find()
-            }
+        resolve(parent,args){
+            return Owners.findOne({
+                email: args.email
+            })
+        }
+    },
+    Owner: {
+        type: OwnerType,
+        args: {
+            email: { type: GraphQLString },
+            password: { type: GraphQLString }
         },
-        Property:{
-            type: PropertyType,
-            args:{_id:{type:GraphQLID}},
-            resolve(parent,args){
-                return Property.findOne({_id:args._id})
-            }
+
+        resolve(parent, args) {
+            return Owners.findOne({
+                email: args.email
+            })
+        }
+    },
+    Owners: {
+        type: new GraphQLList(OwnerType),
+        resolve(parent, args) {
+            return Owners.find()
+        }
+    },
+    Properties: {
+        type: GraphQLList(PropertyType),
+        resolve(parent, args) {
+            return Property.find()
+        }
+    },
+    Property: {
+        type: PropertyType,
+        args: { _id: { type: GraphQLID } },
+        resolve(parent, args) {
+            return Property.findOne({ _id: args._id })
+        }
+    },
+    getOwnerProps: {
+        type: new GraphQLList(PropertyType),
+        args: { email: { type: GraphQLString } },
+        resolve(parent, args) {
+            console.log(args.email)
+            return Property.find({ owner: args.email })
+        }
+    },
+    getCustomerProps: {
+        type: new GraphQLList(PropertyType),
+        args: { email: { type: GraphQLString } },
+        resolve(parent, args) {
+            console.log(args.email)
+            return Property.find({ Customer_name: args.email })
         }
     }
+}
 });
 
 var count = 10;

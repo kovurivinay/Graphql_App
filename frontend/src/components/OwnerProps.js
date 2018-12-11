@@ -5,7 +5,8 @@ import { Route } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { Redirect } from 'react-router';
 import {Node_IP, Node_Port} from "./../config";
-
+import { withApollo } from 'react-apollo';
+import { getOwnerProps } from '../queries/queries';
 class OwnerProps extends Component {
     constructor(props) {
         super(props);
@@ -23,17 +24,21 @@ class OwnerProps extends Component {
         var data = {
             name: localStorage.getItem('email')
         }
-        axios.post(Node_IP+Node_Port+'/get_properties', data)
-            .then((response) => {
-                //update the state with the response data
-                
-                console.log(response.data)
-                this.setState({
-                    props: response.data,
-
-                });
-                
-            });
+        this.props.client.query({
+            query: getOwnerProps,
+            variables: {
+                email: localStorage.getItem('email')
+            }
+        }).then((response) => {
+            console.log("Inside get properties")
+            console.log('Response', response.data);
+            this.setState({
+                props:response.data.getOwnerProps
+            })
+        }).catch((err) => {
+            console.log(err)
+        })
+       
 
 
     }
@@ -119,4 +124,4 @@ class OwnerProps extends Component {
 }
 
 
-export default OwnerProps
+export default withApollo(OwnerProps)
