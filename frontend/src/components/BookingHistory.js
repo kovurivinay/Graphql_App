@@ -41,7 +41,7 @@ class BookingHistory extends Component {
         }).catch((err) => {
             console.log(err)
         })
-    
+        
 
             
     }

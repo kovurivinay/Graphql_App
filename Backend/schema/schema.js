@@ -144,6 +144,12 @@ const RootQuery = new GraphQLObjectType({
         resolve(parent,args){
             return Users.findOne({
                 email: args.email
+            }, function (err, result) {
+                if (err) {
+                    loginVar = err
+                } else if (result) {
+                    console.log(result)
+                }
             })
         }
     },
@@ -155,6 +161,12 @@ const RootQuery = new GraphQLObjectType({
         resolve(parent,args){
             return Owners.findOne({
                 email: args.email
+            }, function (err, result) {
+                if (err) {
+                    loginVar = err
+                } else if (result) {
+                    console.log(result)
+                }
             })
         }
     },
@@ -168,7 +180,20 @@ const RootQuery = new GraphQLObjectType({
         resolve(parent, args) {
             return Owners.findOne({
                 email: args.email
-            })
+            }, function (err, result) {
+                    if (err) {
+                        loginVar = err
+                    } else if (result) {
+                        console.log(result)
+                        if (bcrypt.compareSync(args.password, result.password)) {
+                            loginVar = result;
+                        }
+                        else {
+                            loginVar = "Invalid Login"
+                        }
+                    }
+                    return loginVar;
+                })
         }
     },
     Owners: {
@@ -187,7 +212,13 @@ const RootQuery = new GraphQLObjectType({
         type: PropertyType,
         args: { _id: { type: GraphQLID } },
         resolve(parent, args) {
-            return Property.findOne({ _id: args._id })
+            return Property.findOne({ _id: args._id }, function (err, result) {
+                if (err) {
+                    loginVar = err
+                } else if (result) {
+                    console.log(result)
+                }
+            })
         }
     },
     getOwnerProps: {
@@ -195,7 +226,15 @@ const RootQuery = new GraphQLObjectType({
         args: { email: { type: GraphQLString } },
         resolve(parent, args) {
             console.log(args.email)
-            return Property.find({ owner: args.email })
+            return Property.find({ owner: args.email },
+                 function (err, result) {
+                    if (err) {
+                        loginVar = err
+                    } else if (result) {
+                        console.log(result)
+                    }
+                }
+                )
         }
     },
     getCustomerProps: {
@@ -203,7 +242,13 @@ const RootQuery = new GraphQLObjectType({
         args: { email: { type: GraphQLString } },
         resolve(parent, args) {
             console.log(args.email)
-            return Property.find({ Customer_name: args.email })
+            return Property.find({ Customer_name: args.email }, function (err, result) {
+                if (err) {
+                    loginVar = err
+                } else if (result) {
+                    console.log(result)
+                }
+            })
         }
     }
 }
@@ -252,7 +297,9 @@ const Mutation = new GraphQLObjectType({
                     email: args.email,
                     password: hash
                 })
-                return Owner.save()
+                return Owner.save().then((owner)=>{
+                    console.log(owner)
+                })
             }
         },
         addProperty: {

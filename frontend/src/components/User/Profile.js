@@ -4,7 +4,7 @@ import cookie from 'react-cookies';
 import axios from 'axios';
 import { Node_IP, Node_Port } from "./../../config";
 import { withApollo } from 'react-apollo';
-import { updateUserProfile } from '../../mutation/mutations';
+import { updateUserProfile, updateOwnerProfile } from '../../mutation/mutations';
 import { getUserProfile, getOwnerProfile } from '../../queries/queries';
 
 class Profile extends Component {

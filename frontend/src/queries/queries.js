@@ -55,8 +55,8 @@ const getPropertyDetails = gql`
 }
 `;
 const getOwnerProfile = gql`
-    query Owner($email:String){
-        Owner(email:$email){
+    query getOwnerProfile($email:String){
+        getOwnerProfile(email:$email){
         first,
         last,
         email,
